@@ -12,7 +12,7 @@ export function TechnologyBadges() {
         bg-linear-to-r from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800
         border border-zinc-200 dark:border-zinc-800 shadow-sm">
           <span className="bg-clip-text text-transparent bg-linear-to-r from-zinc-800 to-zinc-600 dark:from-zinc-200 dark:to-zinc-400 font-medium">
-            ساخته شده با Next.js 15 و Tailwind CSS
+            ساخته شده با Next.js 16 و Tailwind CSS
           </span>
           <Sparkles className="w-4 h-4 text-emerald-500 mr-2" />
         </div>
