@@ -6,7 +6,7 @@ import { Minus, Plus, ShoppingCart, X, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import NumberFlow from "@number-flow/react";
+// Removed NumberFlow import due to type mismatches in build
 
 interface Product {
   id: string;
@@ -244,19 +244,9 @@ export default function CheckoutInteraction({
               </span>
               <div className="flex items-center gap-1 text-sm font-bold text-zinc-900 dark:text-zinc-100">
                 {/* استفاده از NumberFlow با تنظیمات ساده‌تر برای اطمینان از رندر */}
-                <NumberFlow
-                  value={totalPrice}
-                  format={{ useGrouping: true }} // جداکننده ۳ رقم
-                  locales="en-US" // عدد خام را انگلیسی می‌گیریم تا مطمئن شویم رندر می‌شود
-                  transformTiming={{ duration: 400, easing: "ease-out" }}
-                  className="font-mono tabular-nums"
-                  // با این تابع کمکی، عدد خروجی را به فارسی تبدیل می‌کنیم
-                  render={(value) => (
-                    <span>
-                      {Number(value.replace(/,/g, "")).toLocaleString("fa-IR")}
-                    </span>
-                  )}
-                />
+                <span className="font-mono tabular-nums">
+                  {totalPrice.toLocaleString("fa-IR")}
+                </span>
                 <span className="text-[11px] font-normal mr-1">تومان</span>
               </div>
             </div>

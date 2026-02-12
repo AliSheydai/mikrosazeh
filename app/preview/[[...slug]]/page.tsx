@@ -39,7 +39,7 @@ export default async function PreviewPage({
     try {
         const Component = dynamic(
             () =>
-                import(`@/components/codesnippetui/${componentName}`).catch(() =>
+                import(`@/components/mikrosazeh/${componentName}`).catch(() =>
                     notFound()
                 ),
             { ssr: true }

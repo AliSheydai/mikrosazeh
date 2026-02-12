@@ -117,7 +117,7 @@ const ParticleCard: React.FC<{
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const particlesRef = useRef<HTMLDivElement[]>([]);
-  const timeoutsRef = useRef<number[]>([]);
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const isHoveredRef = useRef(false);
   const memoizedParticles = useRef<HTMLDivElement[]>([]);
   const particlesInitialized = useRef(false);
@@ -589,7 +589,7 @@ const MagicBento: React.FC<BentoProps> = ({
               >
                 <div className="magic-bento-card__header">
                   <ShinyText
-                    text={card.title}
+                      text={card.title ?? ''}
                     speed={2}
                     delay={0}
                     color="#a855f7"
