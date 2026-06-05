@@ -1,155 +1,155 @@
 "use client";
 
 import { motion } from "motion/react";
-import ShinyText from "../react-bits/ShinyText";
-// import Link from "next/link";
 import { Link as ViewTransitionsLink } from "next-view-transitions";
-import { Layers, LayoutTemplate, BookOpen, ArrowLeft } from "lucide-react";
+import { Layers, LayoutTemplate, Sparkles, ArrowLeft } from "lucide-react";
+import ShinyText from "../react-bits/ShinyText";
 
-// تنظیمات انیمیشن برای پدربزرگ (Container)
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.15, // فاصله بین شروع انیمیشن هر کارت
-    },
+    transition: { staggerChildren: 0.12 },
   },
 };
 
-// تنظیمات انیمیشن برای هر کارت
 const cardVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  hidden: { opacity: 0, y: 24, scale: 0.97 },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 260,
-      damping: 20,
-    },
+    transition: { type: "spring", stiffness: 280, damping: 22 },
   },
 };
 
 export function ComponentCategory() {
   const categories = [
     {
+      index: "01",
       title: "کامپوننت‌ها",
-      description: "اجزای رابط کاربری کوچک و قابل استفاده مجدد شامل دکمه‌ها، فرم‌ها و کارت‌های مدرن.",
+      description:
+        "اجزای رابط کاربری کوچک و قابل استفاده مجدد شامل دکمه‌ها، فرم‌ها و کارت‌های مدرن.",
       link: "/docs/components/ai-input",
       icon: Layers,
-      glowGradient: "linear-gradient(90deg, #4c1d95 0%, #2e1065 100%)",
-      themeColor: "#a855f7",
     },
     {
+      index: "02",
       title: "بلاک‌ها",
-      description: "الگوهای ترکیبی و بلوک‌های آماده برای ساخت صفحات کامل در کمترین زمان ممکن.",
+      description:
+        "الگوهای ترکیبی و بلوک‌های آماده برای ساخت صفحات کامل در کمترین زمان ممکن.",
       link: "/docs/blocks/ai-card-generation",
       icon: LayoutTemplate,
-      glowGradient: "linear-gradient(90deg, #4c1d95 0%, #2e1065 100%)",
-      themeColor: "#a855f7",
     },
     {
+      index: "03",
       title: "کامپوننت‌های پیشرفته",
-      description: "ابزارهای حرفه‌ای و پیشرفته برای توسعه‌دهندگان که نیاز به عملکردهای خاص و سفارشی دارند.",
+      description:
+        "ابزارهای حرفه‌ای و پیشرفته برای توسعه‌دهندگان که نیاز به عملکردهای خاص و سفارشی دارند.",
       link: "/docs/components/antigravity",
-      icon: BookOpen,
-      glowGradient: "linear-gradient(90deg, #4c1d95 0%, #2e1065 100%)",
-      themeColor: "#a855f7",
+      icon: Sparkles,
     },
   ];
 
   return (
-    <section dir="rtl" className="py-12 lg:py-20 font-[vazirmatn,system-ui] overflow-hidden">
-      {/* Header Section */}
+    <section
+      dir="rtl"
+      className="py-16 lg:py-24 font-[vazirmatn,system-ui] overflow-hidden"
+    >
+      {/* Header */}
       <div className="flex flex-col items-center text-center gap-4 mb-16 px-4">
+        {/* Pill tag */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -12 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 100 }}
+          transition={{ duration: 0.5 }}
           viewport={{ once: true }}
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-500 dark:text-zinc-400 tracking-wide"
         >
-          <ShinyText
+          <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+          کتابخانه رابط کاربری
+        </motion.div>
+
+        <motion.h2
+          initial={{ opacity: 0, y: -10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 120 }}
+          viewport={{ once: true }}
+          className="text-4xl md:text-5xl lg:text-6xl font-bold text-zinc-900 dark:text-zinc-50 leading-tight"
+        >
+         <ShinyText
             text="دسته‌بندی"
             speed={2}
             color="#a855f7"
             shineColor="#f472b6"
             className="text-3xl md:text-4xl lg:text-5xl font-bold"
           />
-        </motion.div>
+          
+        </motion.h2>
+
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
+          transition={{ delay: 0.25, duration: 0.7 }}
           viewport={{ once: true }}
-          className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl text-center"
+          className="text-base text-zinc-500 dark:text-zinc-400 max-w-lg leading-relaxed"
         >
-          مجموعه‌ای از ابزارهای رایگان و حرفه‌ای برای سرعت بخشیدن به فرآیند توسعه پروژه‌های شما.
+          مجموعه‌ای از ابزارهای رایگان و حرفه‌ای برای سرعت بخشیدن به فرآیند
+          توسعه پروژه‌های شما.
         </motion.p>
       </div>
 
-      {/* Grid Section */}
-      <motion.div 
+      {/* Cards Grid */}
+      <motion.div
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-50px" }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 max-w-7xl mx-auto"
+        className="grid grid-cols-1 md:grid-cols-3 gap-5 px-4 max-w-5xl mx-auto"
       >
-        {categories.map((item, index) => (
+        {categories.map((item) => (
           <motion.div
-            key={index}
+            key={item.index}
             variants={cardVariants}
-            whileHover={{  
-              transition: { type: "spring", stiffness: 400, damping: 10 } 
-            }}
-            className="group relative"
+            whileHover={{ y: -4, transition: { type: "spring", stiffness: 400, damping: 15 } }}
+            className="group relative bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-7 flex flex-col gap-4 overflow-hidden transition-colors duration-300 hover:border-purple-400/50 dark:hover:border-purple-500/40"
           >
-            {/* Background Glow */}
-            <div
-              className="absolute -inset-0.5 rounded-[2.2rem] blur-md opacity-0 group-hover:opacity-40 transition duration-300"
-              style={{ background: item.glowGradient }}
-            />
+            {/* Top accent line */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-            <div className="relative h-full p-8 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/50 backdrop-blur-sm hover:border-purple-500/50 transition-colors duration-500 flex flex-col shadow-sm">
-              
-              {/* Icon Container */}
-              <motion.div 
-                whileHover={{ rotate: 12, scale: 1.1 }}
-                className="mb-6 inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
-              >
-                <item.icon 
-                  className="w-5 h-5" 
-                  style={{ color: item.themeColor }} 
-                />
-              </motion.div>
+            {/* Index number */}
+            <span className="absolute top-7 left-7 text-[11px] font-bold tabular-nums text-zinc-300 dark:text-zinc-700 tracking-widest">
+              {item.index}
+            </span>
 
-              {/* Content */}
-              <h3 className="text-xl font-bold mb-3 text-zinc-900 dark:text-zinc-100">
+            {/* Icon */}
+            <div className="w-11 h-11 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center">
+              <item.icon className="w-5 h-5 text-purple-500" />
+            </div>
+
+            {/* Title */}
+            <div>
+              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
                 {item.title}
               </h3>
-              <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 mb-8 flex-1">
-                {item.description}
-              </p>
-
-              {/* Action Link */}
-              <ViewTransitionsLink
-                href={item.link}
-                className="inline-flex items-center gap-2 text-sm font-bold group/link "
-              >
-                <span className="text-zinc-900 dark:text-zinc-100 group-hover:text-purple-800 transition-colors">
-                  مشاهده بیشتر
-                </span>
-                <motion.div
-                  animate={{ x: 0 }}
-                  whileHover={{ x: -5 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  <ArrowLeft className="w-4 h-4 text-purple-500 group-hover:text-purple-800" />
-                </motion.div>
-              </ViewTransitionsLink>
             </div>
+
+            {/* Divider */}
+            <div className="h-px bg-zinc-100 dark:bg-zinc-800" />
+
+            {/* Description */}
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed flex-1">
+              {item.description}
+            </p>
+
+            {/* Link */}
+            <ViewTransitionsLink
+              href={item.link}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-purple-500 hover:text-purple-700 dark:hover:text-purple-300 transition-colors group/link"
+            >
+              مشاهده بیشتر
+              <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-200 group-hover/link:-translate-x-1" />
+            </ViewTransitionsLink>
           </motion.div>
         ))}
       </motion.div>
