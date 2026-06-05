@@ -1,0 +1,800 @@
+diff --git a/app/globals.css b/app/globals.css
+index a4ae109404cbaacd526a33d9d24621bb5bf41e68..566b3e4fbba683771deaa286d00004ec5335aee5 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -1,29 +1,47 @@
+ @import "tailwindcss";
+ 
+ @custom-variant dark (&:is(.dark *));
+ 
++
++@keyframes shiny-text-left {
++  from { background-position: 150% center; }
++  to { background-position: -50% center; }
++}
++
++@keyframes shiny-text-right {
++  from { background-position: -50% center; }
++  to { background-position: 150% center; }
++}
++
++@media (prefers-reduced-motion: reduce) {
++  [style*="shiny-text"] {
++    animation: none !important;
++  }
++}
++
++
+ /* @import 'fumadocs-ui/css/neutral.css'; */
+ @import "fumadocs-ui/css/black.css";
+ @import "fumadocs-ui/css/preset.css";
+ 
+ *, .font-vazir {
+   font-family: 'Vazir', sans-serif;
+ }
+ 
+ 
+ @source '../node_modules/fumadocs-ui/dist/**/*.js';
+ 
+ @theme {
+   --color-background: var(--background);
+   --color-foreground: var(--foreground);
+ 
+   --color-sidebar: hsl(var(--sidebar-background));
+   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+   --color-sidebar-primary: hsl(var(--sidebar-primary));
+   --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+   --color-sidebar-accent: hsl(var(--sidebar-accent));
+   --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+   --color-sidebar-border: hsl(var(--sidebar-border));
+   --color-sidebar-ring: hsl(var(--sidebar-ring));
+ 
+   --radius-lg: var(--radius);
+diff --git a/components/react-bits/Grainient.tsx b/components/react-bits/Grainient.tsx
+index 4a70e8db2b063f8ac9b54ba34b7cb42b994f9d34..3f8261c49015778d3088dc266130eedba1d6fc7d 100644
+--- a/components/react-bits/Grainient.tsx
++++ b/components/react-bits/Grainient.tsx
+@@ -5,50 +5,52 @@ import { Renderer, Program, Mesh, Triangle } from 'ogl';
+ 
+ interface GrainientProps {
+   timeSpeed?: number;
+   colorBalance?: number;
+   warpStrength?: number;
+   warpFrequency?: number;
+   warpSpeed?: number;
+   warpAmplitude?: number;
+   blendAngle?: number;
+   blendSoftness?: number;
+   rotationAmount?: number;
+   noiseScale?: number;
+   grainAmount?: number;
+   grainScale?: number;
+   grainAnimated?: boolean;
+   contrast?: number;
+   gamma?: number;
+   saturation?: number;
+   centerX?: number;
+   centerY?: number;
+   zoom?: number;
+   color1?: string;
+   color2?: string;
+   color3?: string;
+   className?: string;
++  maxDpr?: number;
++  targetFps?: number;
+ }
+ 
+ const hexToRgb = (hex: string): [number, number, number] => {
+   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+   if (!result) return [1, 1, 1];
+   return [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255];
+ };
+ 
+ const vertex = `#version 300 es
+ in vec2 position;
+ void main() {
+   gl_Position = vec4(position, 0.0, 1.0);
+ }
+ `;
+ 
+ const fragment = `#version 300 es
+ precision highp float;
+ uniform vec2 iResolution;
+ uniform float iTime;
+ uniform float uTimeSpeed;
+ uniform float uColorBalance;
+ uniform float uWarpStrength;
+ uniform float uWarpFrequency;
+ uniform float uWarpSpeed;
+ uniform float uWarpAmplitude;
+@@ -127,62 +129,64 @@ void main(){
+ `;
+ 
+ const Grainient: React.FC<GrainientProps> = ({
+   timeSpeed = 0.25,
+   colorBalance = 0.0,
+   warpStrength = 1.0,
+   warpFrequency = 5.0,
+   warpSpeed = 2.0,
+   warpAmplitude = 50.0,
+   blendAngle = 0.0,
+   blendSoftness = 0.05,
+   rotationAmount = 500.0,
+   noiseScale = 2.0,
+   grainAmount = 0.1,
+   grainScale = 2.0,
+   grainAnimated = false,
+   contrast = 1.5,
+   gamma = 1.0,
+   saturation = 1.0,
+   centerX = 0.0,
+   centerY = 0.0,
+   zoom = 0.9,
+   color1 = '#FF9FFC',
+   color2 = '#5227FF',
+   color3 = '#B19EEF',
+-  className = ''
++  className = '',
++  maxDpr = 1,
++  targetFps = 30
+ }) => {
+   const containerRef = useRef<HTMLDivElement | null>(null);
+ 
+   useEffect(() => {
+     if (!containerRef.current) return;
+ 
+     const renderer = new Renderer({
+       webgl: 2,
+       alpha: true,
+       antialias: false,
+-      dpr: Math.min(window.devicePixelRatio || 1, 2)
++      dpr: Math.min(window.devicePixelRatio || 1, maxDpr)
+     });
+ 
+     const gl = renderer.gl;
+     const canvas = gl.canvas as HTMLCanvasElement;
+     canvas.style.width = '100%';
+     canvas.style.height = '100%';
+     canvas.style.display = 'block';
+ 
+     const container = containerRef.current;
+     container.appendChild(canvas);
+ 
+     const geometry = new Triangle(gl);
+     const program = new Program(gl, {
+       vertex,
+       fragment,
+       uniforms: {
+         iTime: { value: 0 },
+         iResolution: { value: new Float32Array([1, 1]) },
+         uTimeSpeed: { value: timeSpeed },
+         uColorBalance: { value: colorBalance },
+         uWarpStrength: { value: warpStrength },
+         uWarpFrequency: { value: warpFrequency },
+         uWarpSpeed: { value: warpSpeed },
+         uWarpAmplitude: { value: warpAmplitude },
+         uBlendAngle: { value: blendAngle },
+@@ -198,71 +202,86 @@ const Grainient: React.FC<GrainientProps> = ({
+         uCenterOffset: { value: new Float32Array([centerX, centerY]) },
+         uZoom: { value: zoom },
+         uColor1: { value: new Float32Array(hexToRgb(color1)) },
+         uColor2: { value: new Float32Array(hexToRgb(color2)) },
+         uColor3: { value: new Float32Array(hexToRgb(color3)) }
+       }
+     });
+ 
+     const mesh = new Mesh(gl, { geometry, program });
+ 
+     const setSize = () => {
+       const rect = container.getBoundingClientRect();
+       const width = Math.max(1, Math.floor(rect.width));
+       const height = Math.max(1, Math.floor(rect.height));
+       renderer.setSize(width, height);
+       const res = (program.uniforms.iResolution as { value: Float32Array }).value;
+       res[0] = gl.drawingBufferWidth;
+       res[1] = gl.drawingBufferHeight;
+     };
+ 
+     const ro = new ResizeObserver(setSize);
+     ro.observe(container);
+     setSize();
+ 
+     let raf = 0;
++    let isVisible = true;
++    let lastRender = 0;
++    const frameInterval = 1000 / targetFps;
++    const observer = new IntersectionObserver(([entry]) => {
++      isVisible = entry.isIntersecting;
++    });
++    observer.observe(container);
++
+     const t0 = performance.now();
+     const loop = (t: number) => {
++      raf = requestAnimationFrame(loop);
++      if (!isVisible || document.visibilityState === 'hidden' || t - lastRender < frameInterval) return;
++      lastRender = t;
++
+       (program.uniforms.iTime as { value: number }).value = (t - t0) * 0.001;
+       renderer.render({ scene: mesh });
+-      raf = requestAnimationFrame(loop);
+     };
++    renderer.render({ scene: mesh });
+     raf = requestAnimationFrame(loop);
+ 
+     return () => {
+       cancelAnimationFrame(raf);
++      observer.disconnect();
+       ro.disconnect();
+       try {
+         container.removeChild(canvas);
+       } catch {
+         // Ignore
+       }
+     };
+   }, [
+     timeSpeed,
+     colorBalance,
+     warpStrength,
+     warpFrequency,
+     warpSpeed,
+     warpAmplitude,
+     blendAngle,
+     blendSoftness,
+     rotationAmount,
+     noiseScale,
+     grainAmount,
+     grainScale,
+     grainAnimated,
+     contrast,
+     gamma,
+     saturation,
+     centerX,
+     centerY,
+     zoom,
+     color1,
+     color2,
+-    color3
++    color3,
++    maxDpr,
++    targetFps
+   ]);
+ 
+   return <div ref={containerRef} className={`relative h-full w-full overflow-hidden ${className}`.trim()} />;
+ };
+ 
+ export default Grainient;
+diff --git a/components/react-bits/MagicBento.tsx b/components/react-bits/MagicBento.tsx
+index 7b3320e6b3302a77f8632b403866bf8e44bb5429..14390143108d3fad5e9ff3886717cab96b28fd97 100644
+--- a/components/react-bits/MagicBento.tsx
++++ b/components/react-bits/MagicBento.tsx
+@@ -334,80 +334,84 @@ const ParticleCard: React.FC<{
+     <div
+       ref={cardRef}
+       className={`${className} particle-container`}
+       style={{ ...style, position: 'relative', overflow: 'hidden' }}
+     >
+       {children}
+     </div>
+   );
+ };
+ 
+ const GlobalSpotlight: React.FC<{
+   gridRef: React.RefObject<HTMLDivElement | null>;
+   disableAnimations?: boolean;
+   enabled?: boolean;
+   spotlightRadius?: number;
+   glowColor?: string;
+ }> = ({
+   gridRef,
+   disableAnimations = false,
+   enabled = true,
+   spotlightRadius = DEFAULT_SPOTLIGHT_RADIUS,
+   glowColor = DEFAULT_GLOW_COLOR
+ }) => {
+   const spotlightRef = useRef<HTMLDivElement | null>(null);
+   const isInsideSection = useRef(false);
++  const rafId = useRef<number | null>(null);
++  const latestMouseEvent = useRef<MouseEvent | null>(null);
+ 
+   useEffect(() => {
+     if (disableAnimations || !gridRef?.current || !enabled) return;
+ 
+     const spotlight = document.createElement('div');
+     spotlight.className = 'global-spotlight';
+     spotlight.style.cssText = `
+       position: fixed;
+       width: 800px;
+       height: 800px;
+       border-radius: 50%;
+       pointer-events: none;
+       background: radial-gradient(circle,
+         rgba(${glowColor}, 0.15) 0%,
+         rgba(${glowColor}, 0.08) 15%,
+         rgba(${glowColor}, 0.04) 25%,
+         rgba(${glowColor}, 0.02) 40%,
+         rgba(${glowColor}, 0.01) 65%,
+         transparent 70%
+       );
+       z-index: 200;
+       opacity: 0;
+       transform: translate(-50%, -50%);
+       mix-blend-mode: screen;
+     `;
+     document.body.appendChild(spotlight);
+     spotlightRef.current = spotlight;
+ 
+-    const handleMouseMove = (e: MouseEvent) => {
+-      if (!spotlightRef.current || !gridRef.current) return;
++    const updateSpotlight = () => {
++      rafId.current = null;
++      const e = latestMouseEvent.current;
++      if (!e || !spotlightRef.current || !gridRef.current) return;
+ 
+       const section = gridRef.current.closest('.bento-section');
+       const rect = section?.getBoundingClientRect();
+       const mouseInside =
+         rect && e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+ 
+       isInsideSection.current = mouseInside || false;
+       const cards = gridRef.current.querySelectorAll('.magic-bento-card');
+ 
+       if (!mouseInside) {
+         gsap.to(spotlightRef.current, {
+           opacity: 0,
+           duration: 0.3,
+           ease: 'power2.out'
+         });
+         cards.forEach(card => {
+           (card as HTMLElement).style.setProperty('--glow-intensity', '0');
+         });
+         return;
+       }
+ 
+       const { proximity, fadeDistance } = calculateSpotlightValues(spotlightRadius);
+       let minDistance = Infinity;
+ 
+       cards.forEach(card => {
+@@ -430,68 +434,74 @@ const GlobalSpotlight: React.FC<{
+ 
+         updateCardGlowProperties(cardElement, e.clientX, e.clientY, glowIntensity, spotlightRadius);
+       });
+ 
+       gsap.to(spotlightRef.current, {
+         left: e.clientX,
+         top: e.clientY,
+         duration: 0.1,
+         ease: 'power2.out'
+       });
+ 
+       const targetOpacity =
+         minDistance <= proximity
+           ? 0.8
+           : minDistance <= fadeDistance
+             ? ((fadeDistance - minDistance) / (fadeDistance - proximity)) * 0.8
+             : 0;
+ 
+       gsap.to(spotlightRef.current, {
+         opacity: targetOpacity,
+         duration: targetOpacity > 0 ? 0.2 : 0.5,
+         ease: 'power2.out'
+       });
+     };
+ 
++    const handleMouseMove = (e: MouseEvent) => {
++      latestMouseEvent.current = e;
++      if (rafId.current === null) rafId.current = requestAnimationFrame(updateSpotlight);
++    };
++
+     const handleMouseLeave = () => {
+       isInsideSection.current = false;
+       gridRef.current?.querySelectorAll('.magic-bento-card').forEach(card => {
+         (card as HTMLElement).style.setProperty('--glow-intensity', '0');
+       });
+       if (spotlightRef.current) {
+         gsap.to(spotlightRef.current, {
+           opacity: 0,
+           duration: 0.3,
+           ease: 'power2.out'
+         });
+       }
+     };
+ 
+-    document.addEventListener('mousemove', handleMouseMove);
++    document.addEventListener('mousemove', handleMouseMove, { passive: true });
+     document.addEventListener('mouseleave', handleMouseLeave);
+ 
+     return () => {
++      if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+       document.removeEventListener('mousemove', handleMouseMove);
+       document.removeEventListener('mouseleave', handleMouseLeave);
+       spotlightRef.current?.parentNode?.removeChild(spotlightRef.current);
+     };
+   }, [gridRef, disableAnimations, enabled, spotlightRadius, glowColor]);
+ 
+   return null;
+ };
+ 
+ const BentoCardGrid: React.FC<{
+   children: React.ReactNode;
+   gridRef?: React.RefObject<HTMLDivElement | null>;
+ }> = ({ children, gridRef }) => (
+   <div className="card-grid bento-section" ref={gridRef}>
+     {children}
+   </div>
+ );
+ 
+ const useMobileDetection = () => {
+   const [isMobile, setIsMobile] = useState(false);
+ 
+   useEffect(() => {
+     const checkMobile = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
+ 
+     checkMobile();
+diff --git a/components/react-bits/ShinyText.tsx b/components/react-bits/ShinyText.tsx
+index 8decbe0ad57b2a986c0dfacc4ffe0673f4feaa8f..0b83a4f7884aa3edaf31eb88b8cb6a8b4e1e0d1e 100644
+--- a/components/react-bits/ShinyText.tsx
++++ b/components/react-bits/ShinyText.tsx
+@@ -1,135 +1,73 @@
+ "use client";
+ 
+-import React, { useState, useCallback, useEffect, useRef } from 'react';
+-import { motion, useMotionValue, useAnimationFrame, useTransform } from 'motion/react';
++import React, { useCallback, useMemo, useState } from "react";
+ 
+ interface ShinyTextProps {
+   text: string;
+   disabled?: boolean;
+   speed?: number;
+   className?: string;
+   color?: string;
+   shineColor?: string;
+   spread?: number;
+   yoyo?: boolean;
+   pauseOnHover?: boolean;
+-  direction?: 'left' | 'right';
++  direction?: "left" | "right";
+   delay?: number;
+ }
+ 
+ const ShinyText: React.FC<ShinyTextProps> = ({
+   text,
+   disabled = false,
+   speed = 2,
+-  className = '',
+-  color = '#b5b5b5',
+-  shineColor = '#ffffff',
++  className = "",
++  color = "#b5b5b5",
++  shineColor = "#ffffff",
+   spread = 120,
+   yoyo = false,
+   pauseOnHover = false,
+-  direction = 'left',
+-  delay = 0
++  direction = "left",
++  delay = 0,
+ }) => {
+   const [isPaused, setIsPaused] = useState(false);
+-  const progress = useMotionValue(0);
+-  const elapsedRef = useRef(0);
+-  const lastTimeRef = useRef<number | null>(null);
+-  const directionRef = useRef(direction === 'left' ? 1 : -1);
+-
+-  const animationDuration = speed * 1000;
+-  const delayDuration = delay * 1000;
+-
+-  useAnimationFrame(time => {
+-    if (disabled || isPaused) {
+-      lastTimeRef.current = null;
+-      return;
+-    }
+-
+-    if (lastTimeRef.current === null) {
+-      lastTimeRef.current = time;
+-      return;
+-    }
+-
+-    const deltaTime = time - lastTimeRef.current;
+-    lastTimeRef.current = time;
+-
+-    elapsedRef.current += deltaTime;
+-
+-    // Animation goes from 0 to 100
+-    if (yoyo) {
+-      const cycleDuration = animationDuration + delayDuration;
+-      const fullCycle = cycleDuration * 2;
+-      const cycleTime = elapsedRef.current % fullCycle;
+-
+-      if (cycleTime < animationDuration) {
+-        // Forward animation: 0 -> 100
+-        const p = (cycleTime / animationDuration) * 100;
+-        progress.set(directionRef.current === 1 ? p : 100 - p);
+-      } else if (cycleTime < cycleDuration) {
+-        // Delay at end
+-        progress.set(directionRef.current === 1 ? 100 : 0);
+-      } else if (cycleTime < cycleDuration + animationDuration) {
+-        // Reverse animation: 100 -> 0
+-        const reverseTime = cycleTime - cycleDuration;
+-        const p = 100 - (reverseTime / animationDuration) * 100;
+-        progress.set(directionRef.current === 1 ? p : 100 - p);
+-      } else {
+-        // Delay at start
+-        progress.set(directionRef.current === 1 ? 0 : 100);
+-      }
+-    } else {
+-      const cycleDuration = animationDuration + delayDuration;
+-      const cycleTime = elapsedRef.current % cycleDuration;
+-
+-      if (cycleTime < animationDuration) {
+-        // Animation phase: 0 -> 100
+-        const p = (cycleTime / animationDuration) * 100;
+-        progress.set(directionRef.current === 1 ? p : 100 - p);
+-      } else {
+-        // Delay phase - hold at end (shine off-screen)
+-        progress.set(directionRef.current === 1 ? 100 : 0);
+-      }
+-    }
+-  });
+-
+-  useEffect(() => {
+-    directionRef.current = direction === 'left' ? 1 : -1;
+-    elapsedRef.current = 0;
+-    progress.set(0);
+-    // eslint-disable-next-line react-hooks/exhaustive-deps
+-  }, [direction]);
+-
+-  // Transform: p=0 -> 150% (shine off right), p=100 -> -50% (shine off left)
+-  const backgroundPosition = useTransform(progress, p => `${150 - p * 2}% center`);
+ 
+   const handleMouseEnter = useCallback(() => {
+     if (pauseOnHover) setIsPaused(true);
+   }, [pauseOnHover]);
+ 
+   const handleMouseLeave = useCallback(() => {
+     if (pauseOnHover) setIsPaused(false);
+   }, [pauseOnHover]);
+ 
+-  const gradientStyle: React.CSSProperties = {
+-    backgroundImage: `linear-gradient(${spread}deg, ${color} 0%, ${color} 35%, ${shineColor} 50%, ${color} 65%, ${color} 100%)`,
+-    backgroundSize: '200% auto',
+-    WebkitBackgroundClip: 'text',
+-    backgroundClip: 'text',
+-    WebkitTextFillColor: 'transparent'
+-  };
++  const style = useMemo(
++    () =>
++      ({
++        backgroundImage: `linear-gradient(${spread}deg, ${color} 0%, ${color} 35%, ${shineColor} 50%, ${color} 65%, ${color} 100%)`,
++        backgroundSize: "200% auto",
++        WebkitBackgroundClip: "text",
++        backgroundClip: "text",
++        WebkitTextFillColor: "transparent",
++        animationName: disabled ? "none" : direction === "left" ? "shiny-text-left" : "shiny-text-right",
++        animationDuration: `${speed}s`,
++        animationDelay: `${delay}s`,
++        animationTimingFunction: "linear",
++        animationIterationCount: "infinite",
++        animationDirection: yoyo ? "alternate" : "normal",
++        animationPlayState: isPaused ? "paused" : "running",
++      }) as React.CSSProperties,
++    [color, delay, direction, disabled, isPaused, shineColor, speed, spread, yoyo]
++  );
+ 
+   return (
+-    <motion.span
++    <span
+       className={`inline-block ${className}`}
+-      style={{ ...gradientStyle, backgroundPosition }}
++      style={style}
+       onMouseEnter={handleMouseEnter}
+       onMouseLeave={handleMouseLeave}
+     >
+       {text}
+-    </motion.span>
++    </span>
+   );
+ };
+ 
+ export default ShinyText;
+-//   plugins: [],
+-// };
+diff --git a/components/react-bits/Threads.tsx b/components/react-bits/Threads.tsx
+index 9a043c2f1c47ee23659025122f3ff0634362802a..5b2eb2e4d9082198911b58b8bc10ddde72a3d81d 100644
+--- a/components/react-bits/Threads.tsx
++++ b/components/react-bits/Threads.tsx
+@@ -1,30 +1,40 @@
+ "use client";
++import type React from 'react';
+ import { useEffect, useRef } from 'react';
+ import { Renderer, Program, Mesh, Triangle, Color } from 'ogl';
+ 
+ 
++interface ThreadsProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "color"> {
++  color?: [number, number, number];
++  amplitude?: number;
++  distance?: number;
++  enableMouseInteraction?: boolean;
++  maxDpr?: number;
++  targetFps?: number;
++}
++
+ const vertexShader = `
+ attribute vec2 position;
+ attribute vec2 uv;
+ varying vec2 vUv;
+ void main() {
+   vUv = uv;
+   gl_Position = vec4(position, 0.0, 1.0);
+ }
+ `;
+ 
+ const fragmentShader = `
+ precision highp float;
+ 
+ uniform float iTime;
+ uniform vec3 iResolution;
+ uniform vec3 uColor;
+ uniform float uAmplitude;
+ uniform float uDistance;
+ uniform vec2 uMouse;
+ 
+ #define PI 3.1415926538
+ 
+ const int u_line_count = 40;
+ const float u_line_width = 7.0;
+ const float u_line_blur = 10.0;
+@@ -98,120 +108,148 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+ 
+     float line_strength = 1.0;
+     for (int i = 0; i < u_line_count; i++) {
+         float p = float(i) / float(u_line_count);
+         line_strength *= (1.0 - lineFn(
+             uv,
+             u_line_width * pixel(1.0, iResolution.xy) * (1.0 - p),
+             p,
+             (PI * 1.0) * p,
+             uMouse,
+             iTime,
+             uAmplitude,
+             uDistance
+         ));
+     }
+ 
+     float colorVal = 1.0 - line_strength;
+     fragColor = vec4(uColor * colorVal, colorVal);
+ }
+ 
+ void main() {
+     mainImage(gl_FragColor, gl_FragCoord.xy);
+ }
+ `;
+ 
+-const Threads = ({ color = [0.85, 0.30, 1.00], amplitude = 1, distance = 0, enableMouseInteraction = false, ...rest }) => {
++const Threads = ({
++  color = [0.85, 0.30, 1.00],
++  amplitude = 1,
++  distance = 0,
++  enableMouseInteraction = false,
++  maxDpr = 1,
++  targetFps = 30,
++  ...rest
++}: ThreadsProps) => {
+   const containerRef = useRef<HTMLDivElement | null>(null);
+   const animationFrameId = useRef<number | null>(null);
+ 
+   useEffect(() => {
+     if (!containerRef.current) return;
+     const container = containerRef.current;
+ 
+-    const renderer = new Renderer({ alpha: true });
++    const renderer = new Renderer({
++      alpha: true,
++      dpr: Math.min(window.devicePixelRatio || 1, maxDpr),
++    });
+     const gl = renderer.gl;
+     gl.clearColor(0, 0, 0, 0);
+     gl.enable(gl.BLEND);
+     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
++    gl.canvas.style.width = '100%';
++    gl.canvas.style.height = '100%';
++    gl.canvas.style.display = 'block';
+     container.appendChild(gl.canvas);
+ 
+     const geometry = new Triangle(gl);
+     const program = new Program(gl, {
+       vertex: vertexShader,
+       fragment: fragmentShader,
+       uniforms: {
+         iTime: { value: 0 },
+         iResolution: {
+           value: new Color(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height)
+         },
+         uColor: { value: new Color(...color) },
+         uAmplitude: { value: amplitude },
+         uDistance: { value: distance },
+         uMouse: { value: new Float32Array([0.5, 0.5]) }
+       }
+     });
+ 
+     const mesh = new Mesh(gl, { geometry, program });
+ 
+     function resize() {
+       const { clientWidth, clientHeight } = container;
+       renderer.setSize(clientWidth, clientHeight);
+       program.uniforms.iResolution.value.r = clientWidth;
+       program.uniforms.iResolution.value.g = clientHeight;
+       program.uniforms.iResolution.value.b = clientWidth / clientHeight;
+     }
+-    window.addEventListener('resize', resize);
++    const resizeObserver = new ResizeObserver(resize);
++    resizeObserver.observe(container);
+     resize();
+ 
+     let currentMouse = [0.5, 0.5];
+     let targetMouse = [0.5, 0.5];
+ 
+     function handleMouseMove(e: MouseEvent) {
+       const rect = container.getBoundingClientRect();
+       const x = (e.clientX - rect.left) / rect.width;
+       const y = 1.0 - (e.clientY - rect.top) / rect.height;
+       targetMouse = [x, y];
+     }
+     function handleMouseLeave() {
+       targetMouse = [0.5, 0.5];
+     }
+     if (enableMouseInteraction) {
+       container.addEventListener('mousemove', handleMouseMove);
+       container.addEventListener('mouseleave', handleMouseLeave);
+     }
+ 
++    let isVisible = true;
++    let lastRender = 0;
++    const frameInterval = 1000 / targetFps;
++    const observer = new IntersectionObserver(([entry]) => {
++      isVisible = entry.isIntersecting;
++    });
++    observer.observe(container);
++
+     function update(t: number) {
++      animationFrameId.current = requestAnimationFrame(update);
++      if (!isVisible || document.visibilityState === 'hidden' || t - lastRender < frameInterval) return;
++      lastRender = t;
++
+       if (enableMouseInteraction) {
+         const smoothing = 0.05;
+         currentMouse[0] += smoothing * (targetMouse[0] - currentMouse[0]);
+         currentMouse[1] += smoothing * (targetMouse[1] - currentMouse[1]);
+         program.uniforms.uMouse.value[0] = currentMouse[0];
+         program.uniforms.uMouse.value[1] = currentMouse[1];
+       } else {
+         program.uniforms.uMouse.value[0] = 0.5;
+         program.uniforms.uMouse.value[1] = 0.5;
+       }
+       program.uniforms.iTime.value = t * 0.001;
+ 
+       renderer.render({ scene: mesh });
+-      animationFrameId.current = requestAnimationFrame(update);
+     }
++    renderer.render({ scene: mesh });
+     animationFrameId.current = requestAnimationFrame(update);
+ 
+     return () => {
+       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+-      window.removeEventListener('resize', resize);
++      observer.disconnect();
++      resizeObserver.disconnect();
+ 
+       if (enableMouseInteraction) {
+         container.removeEventListener('mousemove', handleMouseMove);
+         container.removeEventListener('mouseleave', handleMouseLeave);
+       }
+       if (container.contains(gl.canvas)) container.removeChild(gl.canvas);
+       gl.getExtension('WEBGL_lose_context')?.loseContext();
+     };
+-  }, [color, amplitude, distance, enableMouseInteraction]);
++  }, [color, amplitude, distance, enableMouseInteraction, maxDpr, targetFps]);
+ 
+   return <div ref={containerRef} className="threads-container" {...rest} />;
+ };
+ 
+ export default Threads;

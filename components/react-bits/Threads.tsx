@@ -1,7 +1,17 @@
 "use client";
+import type React from 'react';
 import { useEffect, useRef } from 'react';
 import { Renderer, Program, Mesh, Triangle, Color } from 'ogl';
 
+
+interface ThreadsProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "color"> {
+  color?: [number, number, number];
+  amplitude?: number;
+  distance?: number;
+  enableMouseInteraction?: boolean;
+  maxDpr?: number;
+  targetFps?: number;
+}
 
 const vertexShader = `
 attribute vec2 position;
@@ -120,7 +130,15 @@ void main() {
 }
 `;
 
-const Threads = ({ color = [0.85, 0.30, 1.00], amplitude = 1, distance = 0, enableMouseInteraction = false, ...rest }) => {
+const Threads = ({
+  color = [0.85, 0.30, 1.00],
+  amplitude = 1,
+  distance = 0,
+  enableMouseInteraction = false,
+  maxDpr = 1,
+  targetFps = 30,
+  ...rest
+}: ThreadsProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const animationFrameId = useRef<number | null>(null);
 
@@ -128,11 +146,17 @@ const Threads = ({ color = [0.85, 0.30, 1.00], amplitude = 1, distance = 0, enab
     if (!containerRef.current) return;
     const container = containerRef.current;
 
-    const renderer = new Renderer({ alpha: true });
+    const renderer = new Renderer({
+      alpha: true,
+      dpr: Math.min(window.devicePixelRatio || 1, maxDpr),
+    });
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.canvas.style.width = '100%';
+    gl.canvas.style.height = '100%';
+    gl.canvas.style.display = 'block';
     container.appendChild(gl.canvas);
 
     const geometry = new Triangle(gl);
@@ -160,7 +184,8 @@ const Threads = ({ color = [0.85, 0.30, 1.00], amplitude = 1, distance = 0, enab
       program.uniforms.iResolution.value.g = clientHeight;
       program.uniforms.iResolution.value.b = clientWidth / clientHeight;
     }
-    window.addEventListener('resize', resize);
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(container);
     resize();
 
     let currentMouse = [0.5, 0.5];
@@ -180,7 +205,19 @@ const Threads = ({ color = [0.85, 0.30, 1.00], amplitude = 1, distance = 0, enab
       container.addEventListener('mouseleave', handleMouseLeave);
     }
 
+    let isVisible = true;
+    let lastRender = 0;
+    const frameInterval = 1000 / targetFps;
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+    });
+    observer.observe(container);
+
     function update(t: number) {
+      animationFrameId.current = requestAnimationFrame(update);
+      if (!isVisible || document.visibilityState === 'hidden' || t - lastRender < frameInterval) return;
+      lastRender = t;
+
       if (enableMouseInteraction) {
         const smoothing = 0.05;
         currentMouse[0] += smoothing * (targetMouse[0] - currentMouse[0]);
@@ -194,13 +231,14 @@ const Threads = ({ color = [0.85, 0.30, 1.00], amplitude = 1, distance = 0, enab
       program.uniforms.iTime.value = t * 0.001;
 
       renderer.render({ scene: mesh });
-      animationFrameId.current = requestAnimationFrame(update);
     }
+    renderer.render({ scene: mesh });
     animationFrameId.current = requestAnimationFrame(update);
 
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
-      window.removeEventListener('resize', resize);
+      observer.disconnect();
+      resizeObserver.disconnect();
 
       if (enableMouseInteraction) {
         container.removeEventListener('mousemove', handleMouseMove);
@@ -209,7 +247,7 @@ const Threads = ({ color = [0.85, 0.30, 1.00], amplitude = 1, distance = 0, enab
       if (container.contains(gl.canvas)) container.removeChild(gl.canvas);
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
-  }, [color, amplitude, distance, enableMouseInteraction]);
+  }, [color, amplitude, distance, enableMouseInteraction, maxDpr, targetFps]);
 
   return <div ref={containerRef} className="threads-container" {...rest} />;
 };

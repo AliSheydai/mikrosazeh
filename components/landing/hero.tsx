@@ -2,7 +2,6 @@
 
 import type React from "react";
 
-import Link from "next/link";
 import TailwindCSS from "@/components/icons/tailwindcss";
 import { motion } from "motion/react";
 import Threads from "../react-bits/Threads";
@@ -18,21 +17,13 @@ import {
   Code,
   Layers,
 } from "lucide-react";
-import { Btn14 } from "../mikrosazeh/button/btn-14";
-import Btn03 from "../mikrosazeh/button/btn-03";
-import Input09 from "../mikrosazeh/input/input-09";
-import AIInput_04 from "../mikrosazeh/ai-input/ai-input-04";
 
-import Card08 from "../mikrosazeh/card/card-08";
+
 import { BrowseBlocksButton } from "../ui/browse-blocks";
 import { BrowseComponentsButton } from "../ui/browse-button";
 import Features from "./feature-block";
 
-import Card02 from "../mikrosazeh/card/card-02";
-import Stepper, { Step } from "../react-bits/Stepper";
-import Btn02 from "../mikrosazeh/button/btn-02";
-import Btn15 from "../mikrosazeh/button/btn-15";
-import Btn04 from "../mikrosazeh/button/btn-04";
+
 
 interface Action {
   id: string;
@@ -49,7 +40,6 @@ export function HeroSection() {
       dir="rtl"
       lang="fa"
       className="relative w-screen min-h-screen py-12 md:py-16 lg:py-20">
-      {/* Left side - Title and CTA */}
       <div className="absolute z-0 top-0 left-0 w-full h-full">
         <Threads amplitude={1} distance={0} enableMouseInteraction />
       </div>
@@ -98,7 +88,7 @@ export function HeroSection() {
               </span>
             </span>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-start gap-3 pointer-events-auto">
-              <BrowseComponentsButton href="/docs/components/ai-input"/>
+              <BrowseComponentsButton href="/docs/components/ai-input" />
               <BrowseBlocksButton />
             </div>
           </motion.div>
@@ -108,77 +98,6 @@ export function HeroSection() {
           </div>
         </div>
       </div>
-
-      {/* Right side - Components Layout */}
-      {/* <div className="w-full lg:w-[55%] flex flex-col justify-between gap-6 lg:pl-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 items-center justify-center">
-          <div className="w-full flex flex-col items-center justify-center ">
-            
-            <div className="w-full grid grid-cols-1 gap-6">
-              <div className="w-full">
-                <span className="text-sm text-zinc-500 dark:text-zinc-400 block text-center mb-2">
-                  دکمه‌ها
-                </span>
-                <div className="w-full h-64 rounded-xl border border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center gap-5">
-                  <Link href="/docs/components/button">
-                    <Btn14 label="مشاهده" className=" w-42 py-5" />
-                  </Link>
-                  <Link href="/docs/components/button">
-                    <Btn04 className="w-42 py-3" />
-                  </Link>
-                  <Link href="/docs/components/button">
-                    <Btn15 className=" w-42 py-5" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="w-full max-w-[600px] bg-transparent">
-            <span className="text-sm text-zinc-500 dark:text-zinc-400 block text-center mb-2">
-              کامپوننت‌ها
-            </span>
-
-            <Card02 />
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full">
-          
-          <Stepper
-            initialStep={1}
-            onStepChange={(step) => {
-              console.log(step);
-            }}
-            onFinalStepCompleted={() => console.log("همه مراحل انجام شد!")}
-            backButtonText="قبلی"
-            nextButtonText="بعدی">
-            <Step>
-              <h2>به میکروسازه خوش آمدید!</h2>
-              <p>مرحله بعدی رو بررسی کنید.</p>
-            </Step>
-            <Step>
-              <h2>مرحله 2</h2>
-              <p>محتوای این مرحله رو شخصی سازی کنید.</p>
-            </Step>
-            <Step>
-              <h2>میتونی یک اینپوت داشته باشی.</h2>
-            </Step>
-            <Step>
-              <h2>مرحله اخر</h2>
-              <p>تمام!</p>
-            </Step>
-          </Stepper>
-        </motion.div>
-      </div> */}
     </div>
   );
 }

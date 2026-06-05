@@ -27,6 +27,8 @@ interface GrainientProps {
   color2?: string;
   color3?: string;
   className?: string;
+  maxDpr?: number;
+  targetFps?: number;
 }
 
 const hexToRgb = (hex: string): [number, number, number] => {
@@ -149,7 +151,9 @@ const Grainient: React.FC<GrainientProps> = ({
   color1 = '#FF9FFC',
   color2 = '#5227FF',
   color3 = '#B19EEF',
-  className = ''
+  className = '',
+  maxDpr = 1,
+  targetFps = 30
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -160,7 +164,7 @@ const Grainient: React.FC<GrainientProps> = ({
       webgl: 2,
       alpha: true,
       antialias: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 2)
+      dpr: Math.min(window.devicePixelRatio || 1, maxDpr)
     });
 
     const gl = renderer.gl;
@@ -220,16 +224,29 @@ const Grainient: React.FC<GrainientProps> = ({
     setSize();
 
     let raf = 0;
+    let isVisible = true;
+    let lastRender = 0;
+    const frameInterval = 1000 / targetFps;
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+    });
+    observer.observe(container);
+
     const t0 = performance.now();
     const loop = (t: number) => {
+      raf = requestAnimationFrame(loop);
+      if (!isVisible || document.visibilityState === 'hidden' || t - lastRender < frameInterval) return;
+      lastRender = t;
+
       (program.uniforms.iTime as { value: number }).value = (t - t0) * 0.001;
       renderer.render({ scene: mesh });
-      raf = requestAnimationFrame(loop);
     };
+    renderer.render({ scene: mesh });
     raf = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(raf);
+      observer.disconnect();
       ro.disconnect();
       try {
         container.removeChild(canvas);
@@ -259,7 +276,9 @@ const Grainient: React.FC<GrainientProps> = ({
     zoom,
     color1,
     color2,
-    color3
+    color3,
+    maxDpr,
+    targetFps
   ]);
 
   return <div ref={containerRef} className={`relative h-full w-full overflow-hidden ${className}`.trim()} />;

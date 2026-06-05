@@ -56,3 +56,10 @@ Most components depend on a few core utilities. Ensure you have them installed i
 ```bash
 npm install framer-motion lucide-react clsx tailwind-merge
 ```
+
+<!-- apply git patch -->
+
+code fix.patch
+git apply --3way fix.patch
+or
+git apply --reject --whitespace=fix fix.patch

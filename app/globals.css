@@ -2,6 +2,24 @@
 
 @custom-variant dark (&:is(.dark *));
 
+
+@keyframes shiny-text-left {
+  from { background-position: 150% center; }
+  to { background-position: -50% center; }
+}
+
+@keyframes shiny-text-right {
+  from { background-position: -50% center; }
+  to { background-position: 150% center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="shiny-text"] {
+    animation: none !important;
+  }
+}
+
+
 /* @import 'fumadocs-ui/css/neutral.css'; */
 @import "fumadocs-ui/css/black.css";
 @import "fumadocs-ui/css/preset.css";

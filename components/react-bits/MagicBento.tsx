@@ -356,6 +356,8 @@ const GlobalSpotlight: React.FC<{
 }) => {
   const spotlightRef = useRef<HTMLDivElement | null>(null);
   const isInsideSection = useRef(false);
+  const rafId = useRef<number | null>(null);
+  const latestMouseEvent = useRef<MouseEvent | null>(null);
 
   useEffect(() => {
     if (disableAnimations || !gridRef?.current || !enabled) return;
@@ -384,8 +386,10 @@ const GlobalSpotlight: React.FC<{
     document.body.appendChild(spotlight);
     spotlightRef.current = spotlight;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!spotlightRef.current || !gridRef.current) return;
+    const updateSpotlight = () => {
+      rafId.current = null;
+      const e = latestMouseEvent.current;
+      if (!e || !spotlightRef.current || !gridRef.current) return;
 
       const section = gridRef.current.closest('.bento-section');
       const rect = section?.getBoundingClientRect();
@@ -452,6 +456,11 @@ const GlobalSpotlight: React.FC<{
       });
     };
 
+    const handleMouseMove = (e: MouseEvent) => {
+      latestMouseEvent.current = e;
+      if (rafId.current === null) rafId.current = requestAnimationFrame(updateSpotlight);
+    };
+
     const handleMouseLeave = () => {
       isInsideSection.current = false;
       gridRef.current?.querySelectorAll('.magic-bento-card').forEach(card => {
@@ -466,10 +475,11 @@ const GlobalSpotlight: React.FC<{
       }
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mousemove', handleMouseMove, { passive: true });
     document.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
+      if (rafId.current !== null) cancelAnimationFrame(rafId.current);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseleave', handleMouseLeave);
       spotlightRef.current?.parentNode?.removeChild(spotlightRef.current);
